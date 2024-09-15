@@ -1,18 +1,19 @@
 package com.sb.projects.trader.config;
 
-import lombok.Getter;
-import lombok.Setter;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
 @ConfigurationProperties
-public class MockServiceConfig {
+public class ApplicationConfig {
+    @Value("${trader.broker.paytm.auth.apiKey}")
+    public String apiKey;
 
-    @Value("${mocks.staticDataService:false}")
-    public boolean mockStaticDataService;
+    @Value("${trader.broker.paytm.auth.apiSecret}")
+    public String apiSecret;
 
-    @Value("${mocks.paytmServices:false}")
-    public boolean mockPaytmServices;
+    @Value("${trader.broker.paytm.baseUrl}")
+    public String paytmBaseUrl;
 }

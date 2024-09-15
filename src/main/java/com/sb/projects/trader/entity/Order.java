@@ -8,7 +8,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @Entity
-@Table(name = "Orders")
+@Table(name = "orders")
 public class Order implements JpaEntityObject{
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

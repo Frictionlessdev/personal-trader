@@ -1,3 +1,11 @@
+trader:
+  broker:
+    paytm:
+      baseUrl: https://developer.paytmmoney.com/
+      auth:
+        apiKey: 6d2a56063b4041138bfa791104e1bd89
+        apiSecret: 5c484dfde00b4b248c29faacaea28248
+
 spring:
   profiles:
     active: mock

@@ -1,5 +1,10 @@
 package com.sb.projects.trader.service;
 
-public interface BrokerTokenService {
-    void getToken();
+import com.sb.projects.trader.DTO.BrokerTokenDTO;
+import com.sb.projects.trader.DTO.DataTransferObject;
+import com.sb.projects.trader.DTO.TokenDTO;
+import reactor.core.publisher.Mono;
+
+public interface BrokerTokenService<T extends DataTransferObject, U extends DataTransferObject> {
+    Mono<T> getToken(U body);
 }

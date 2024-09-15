@@ -1,3 +1,4 @@
 
 mocks:
   staticDataService: false
+  paytmServices: true

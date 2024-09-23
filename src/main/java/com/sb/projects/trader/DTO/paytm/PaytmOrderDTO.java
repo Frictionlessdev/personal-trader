@@ -1,21 +1,16 @@
 package com.sb.projects.trader.DTO.paytm;
 
-import com.fasterxml.jackson.annotation.JsonAlias;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.sb.projects.trader.DTO.DataTransferObject;
 import lombok.*;
 
+@ToString
 @Getter
-@Setter
-@JsonSerialize
-@JsonDeserialize
 public class PaytmOrderDTO implements DataTransferObject {
-    @JsonAlias(value = "id")
-    private String id;
+    private final String id;
+    private final String status;
 
-    public PaytmOrderDTO(String id){
+    public PaytmOrderDTO(String id, String status) {
+        this.status = status;
         this.id = id;
     }
 }

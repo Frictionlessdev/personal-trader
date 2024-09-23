@@ -1,10 +1,13 @@
 package com.sb.projects.trader.entity;
 
 import com.sb.projects.trader.enums.Exchange;
+import com.sb.projects.trader.enums.OrderStatus;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 
+@ToString
 @Getter
 @Setter
 @Entity
@@ -29,4 +32,7 @@ public class Order implements JpaEntityObject{
 
     @Column(name = "userId", nullable = false)
     private String userId;
+
+    @Column(name = "status", nullable = false)
+    private OrderStatus status;
 }

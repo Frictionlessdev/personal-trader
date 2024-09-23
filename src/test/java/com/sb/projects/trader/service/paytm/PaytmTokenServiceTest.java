@@ -1,4 +1,4 @@
-package com.sb.projects.trader.service.remote;
+package com.sb.projects.trader.service.paytm;
 
 import com.sb.projects.trader.DTO.BrokerTokenDTO;
 import com.sb.projects.trader.DTO.paytm.PaytmTokenRequestDTO;

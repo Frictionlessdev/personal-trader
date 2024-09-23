@@ -16,4 +16,13 @@ public class ApplicationConfig {
 
     @Value("${trader.broker.paytm.baseUrl}")
     public String paytmBaseUrl;
+
+    @Value("${trader.order.processor.initialDelay:100}")
+    public long processorInitialDelay;
+
+    @Value("${trader.order.processor.interval:500}")
+    public long processorInterval;
+
+    @Value("${trader.order.processor.threadPool.size:1}")
+    public int processorThreadPoolSize;
 }

@@ -2,6 +2,7 @@ package com.sb.projects.trader.service;
 
 import com.sb.projects.trader.DTO.OrderDTO;
 import com.sb.projects.trader.entity.Order;
+import com.sb.projects.trader.enums.OrderStatus;
 import com.sb.projects.trader.repository.OrderRepository;
 import com.sb.projects.trader.transformer.OrderTransformer;
 import lombok.AllArgsConstructor;
@@ -24,6 +25,7 @@ public class OrderServiceImpl implements OrderService {
             entity.setPrice(dto.getPrice());
             entity.setUserId(dto.getUserId());
             entity.setSecurityId((dto.getSecurityId()));
+            entity.setStatus(OrderStatus.Saved);
             return entity;
         });
 
@@ -37,18 +39,24 @@ public class OrderServiceImpl implements OrderService {
                     .price(entity.getPrice())
                     .securityId(entity.getSecurityId())
                     .userId(entity.getUserId())
+                    .status(entity.getStatus())
                     .build()
         );
     }
 
     @Override
-    public List<Order> findByStatus(String status) {
-        return List.of();
+    public List<Order> getPendingOrders() {
+        return orderRepository.findByStatus(OrderStatus.Saved);
     }
 
     @Override
-    public Order findById(String id) {
+    public Order get(String orderId) {
         return null;
+    }
+
+    @Override
+    public void updateStatus(String id, OrderStatus status) {
+        orderRepository.updateStatus(id, status);
     }
 
     @Override

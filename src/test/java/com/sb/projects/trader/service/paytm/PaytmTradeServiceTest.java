@@ -1,9 +1,7 @@
-package com.sb.projects.trader.service.remote;
+package com.sb.projects.trader.service.paytm;
 
-import com.sb.projects.trader.DTO.OrderDTO;
 import com.sb.projects.trader.DTO.paytm.PaytmOrderDTO;
 import com.sb.projects.trader.DTO.paytm.PaytmOrderRequestDTO;
-import com.sb.projects.trader.DTO.paytm.PaytmTokenDTO;
 import com.sb.projects.trader.TraderApplicationTests;
 import com.sb.projects.trader.enums.Exchange;
 import com.sb.projects.trader.service.BrokerService;
@@ -34,11 +32,18 @@ class PaytmTradeServiceTest extends TraderApplicationTests {
                 .offMktFlag("true")
                 .build();
 
+
+
         Mono<PaytmOrderDTO> paytmOrderDTOMono = paytmBrokerService
                 .submitOrder(paytmOrderRequestDTO);
 
         PaytmOrderDTO paytmOrderDTO = paytmOrderDTOMono.block();
 
         assertNotNull(paytmOrderDTO);
+
+       /* BrokerTokenDTO actual = brokerTokenDTOMono.block();
+
+        assertNotNull(actual);
+        assertNotNull(actual, actual.getAccessToken());*/
     }
 }

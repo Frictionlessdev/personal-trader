@@ -6,7 +6,9 @@ import com.sb.projects.trader.enums.Exchange;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Getter;
+import lombok.ToString;
 
+@ToString
 @Data
 @Builder
 public class PaytmOrderRequestDTO implements DataTransferObject {
@@ -42,4 +44,6 @@ public class PaytmOrderRequestDTO implements DataTransferObject {
 
     @JsonProperty("off_mkt_flag")
     private String offMktFlag;
+
+    private String orderId;
 }

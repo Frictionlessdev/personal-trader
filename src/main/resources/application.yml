@@ -5,6 +5,7 @@ trader:
       auth:
         apiKey: 6d2a56063b4041138bfa791104e1bd89
         apiSecret: 5c484dfde00b4b248c29faacaea28248
+        requestToken: 6817f1334c0e41e9bfe07175aded3d62
 
 spring:
   profiles:

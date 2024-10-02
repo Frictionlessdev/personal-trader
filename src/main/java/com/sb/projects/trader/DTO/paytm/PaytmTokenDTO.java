@@ -3,21 +3,25 @@ package com.sb.projects.trader.DTO.paytm;
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.sb.projects.trader.DTO.BrokerTokenDTO;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
 
+@ToString
 @Getter
+@NoArgsConstructor
 public class PaytmTokenDTO extends BrokerTokenDTO {
     @JsonAlias(value = "merchant_id")
-    private final String merchantId;
+    private String merchantId;
     @JsonAlias(value = "channel_id")
-    private final String channelId;
+    private String channelId;
     @JsonAlias(value = "api_key")
-    private final String apiKey;
+    private String apiKey;
     @JsonAlias(value = "access_token")
-    private final String paytmAccessToken;
+    private String paytmAccessToken;
     @JsonAlias(value = "public_access_token")
-    private final String publicAccessToken;
+    private String publicAccessToken;
     @JsonAlias(value = "read_access_token")
-    private final String readAccessToken;
+    private String readAccessToken;
 
     public PaytmTokenDTO(String accessToken, String merchantId, String channelId, String apiKey, String paytmAccessToken, String publicAccessToken, String readAccessToken) {
         super(paytmAccessToken);

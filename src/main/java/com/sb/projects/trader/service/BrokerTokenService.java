@@ -5,6 +5,6 @@ import com.sb.projects.trader.DTO.DataTransferObject;
 import com.sb.projects.trader.DTO.TokenDTO;
 import reactor.core.publisher.Mono;
 
-public interface BrokerTokenService<T extends DataTransferObject, U> {
-    Mono<T> getToken(U body);
+public interface BrokerTokenService<T extends DataTransferObject> {
+    Mono<T> getToken();
 }

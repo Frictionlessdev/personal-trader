@@ -5,7 +5,7 @@ import lombok.Getter;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 @Getter
-public class BaseTraderException extends Exception {
+public class BaseTraderException extends RuntimeException {
 
     private final ErrorCode errorCode;
 

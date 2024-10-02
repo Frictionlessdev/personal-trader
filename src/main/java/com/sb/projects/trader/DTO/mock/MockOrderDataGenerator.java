@@ -19,11 +19,21 @@ public class MockOrderDataGenerator {
     @PostConstruct
     public void generate(){
         log.info("Generating Mock orders in order Repository [MockOrderDataGenerator]");
-        Order order = new Order();
+        /*Order order = new Order();
         order.setSecurityId("11223344");
         order.setPrice(1234.9);
         order.setUserId("test@test.com");
         order.setQuantity(199);
+        order.setExchange(Exchange.NSE);
+        order.setStatus(OrderStatus.Saved);
+
+        orderRepository.save(order);*/
+
+        Order order = new Order();
+        order.setSecurityId("19084");
+        order.setPrice(StrictMath.absExact(0));
+        order.setUserId("test@test.com");
+        order.setQuantity(1);
         order.setExchange(Exchange.NSE);
         order.setStatus(OrderStatus.Saved);
 

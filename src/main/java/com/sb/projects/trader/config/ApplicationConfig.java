@@ -14,6 +14,9 @@ public class ApplicationConfig {
     @Value("${trader.broker.paytm.auth.apiSecret}")
     public String apiSecret;
 
+    @Value("${trader.broker.paytm.auth.requestToken}")
+    public String requestToken;
+
     @Value("${trader.broker.paytm.baseUrl}")
     public String paytmBaseUrl;
 

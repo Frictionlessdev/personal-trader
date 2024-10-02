@@ -3,6 +3,7 @@ package com.sb.projects.trader.service;
 import com.sb.projects.trader.DTO.OrderDTO;
 import com.sb.projects.trader.entity.Order;
 import com.sb.projects.trader.enums.Exchange;
+import com.sb.projects.trader.enums.OrderStatus;
 import com.sb.projects.trader.repository.OrderRepository;
 import com.sb.projects.trader.transformer.OrderTransformer;
 import org.hamcrest.Matchers;
@@ -11,6 +12,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+
+import java.util.Optional;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 
@@ -48,6 +51,7 @@ public class OrderServiceImplTest {
         expected.setQuantity(100);
         expected.setExchange(Exchange.NSE);
         expected.setUserId("Test userId");
+        expected.setStatus(OrderStatus.Saved);
 
         Mockito.doReturn(expected).when(orderRepository).save(Mockito.any());
 
@@ -65,7 +69,8 @@ public class OrderServiceImplTest {
         order.setQuantity(100);
         order.setExchange(Exchange.NSE);
         order.setUserId("Test userId");
+        order.setStatus(OrderStatus.Saved);
 
-        Mockito.doReturn(order).when(orderRepository).findById(Mockito.any());
+        Mockito.doReturn(Optional.ofNullable(order)).when(orderRepository).findById(Mockito.any());
     }
 }

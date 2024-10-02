@@ -17,7 +17,7 @@ class PaytmTokenServiceTest extends TraderApplicationTests {
     PaytmTokenService paytmTokenService;*/
 
     @Autowired
-    BrokerTokenService<BrokerTokenDTO, PaytmTokenRequestDTO> brokerTokenService;
+    BrokerTokenService<BrokerTokenDTO, String> brokerTokenService;
 
     @Autowired
     ApplicationConfig applicationConfig;
@@ -27,10 +27,7 @@ class PaytmTokenServiceTest extends TraderApplicationTests {
     @Test
     void givenRequestToken_makeRemoteTokenCall_Successfully(){
         Mono<BrokerTokenDTO> brokerTokenDTOMono = brokerTokenService
-                .getToken(PaytmTokenRequestDTO.builder()
-                        .apiKey(applicationConfig.apiKey)
-                        .apiSecret(applicationConfig.apiSecret)
-                        .requestToken(requestToken).build());
+                .getToken(requestToken);
 
         BrokerTokenDTO actual = brokerTokenDTOMono.block();
 

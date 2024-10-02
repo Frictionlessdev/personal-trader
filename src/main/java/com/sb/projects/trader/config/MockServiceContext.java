@@ -1,28 +1,16 @@
 package com.sb.projects.trader.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sb.projects.trader.DTO.BrokerTokenDTO;
+import com.sb.projects.trader.DTO.BrokerErrorDTO;
 import com.sb.projects.trader.DTO.mock.MockOrderDataGenerator;
-import com.sb.projects.trader.DTO.paytm.PaytmOrderDTO;
-import com.sb.projects.trader.DTO.paytm.PaytmOrderRequestDTO;
-import com.sb.projects.trader.DTO.paytm.PaytmTokenDTO;
+import com.sb.projects.trader.DTO.paytm.*;
 import com.sb.projects.trader.DTO.mock.MockStaticDataGenerator;
-import com.sb.projects.trader.DTO.paytm.PaytmTokenRequestDTO;
-import com.sb.projects.trader.entity.Order;
 import com.sb.projects.trader.exceptions.BaseTraderException;
 import com.sb.projects.trader.repository.OrderRepository;
 import com.sb.projects.trader.repository.SecurityRepository;
 import com.sb.projects.trader.service.*;
-import com.sb.projects.trader.service.mock.MockPaytmTokenService;
-import com.sb.projects.trader.service.mock.MockPaytmTradeService;
 import com.sb.projects.trader.service.mock.MockStaticDataServiceImpl;
-import com.sb.projects.trader.service.paytm.PaytmOrderProcessingService;
-import com.sb.projects.trader.service.paytm.PaytmTokenService;
-import com.sb.projects.trader.service.paytm.PaytmTradeService;
-import com.sb.projects.trader.transformer.BaseEntityTransformer;
-import com.sb.projects.trader.transformer.OrderTransformer;
 import com.sb.projects.trader.transformer.SecurityTransformer;
-import com.sb.projects.trader.utils.ReactiveWebClient;
 import io.netty.handler.logging.LogLevel;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -85,76 +73,20 @@ public class MockServiceContext {
     }
 
     @Bean
-    public WebClient paytmWebClient() throws IOException {
-        setUpMockBrokerServer(9000);
-
+    public WebClient paytmWebClient(MockWebServer mockWebServer) throws IOException {
         String baseUrl = applicationConfig.paytmBaseUrl;
-        if (mockServiceConfig.mockPaytmServices) {
-            baseUrl = String.format("http://localhost:%s", 9000);
-        }
+        if (mockServiceConfig.mockPaytmServices)
+            baseUrl = String.format("http://localhost:%s", mockServiceConfig.mockPaytmServicesPort);
 
         var httpClient = HttpClient
                 .create()
                 .wiretap("reactor.netty.http.client.HttpClient",
-                        LogLevel.DEBUG, AdvancedByteBufFormat.TEXTUAL);
+                        LogLevel.INFO, AdvancedByteBufFormat.TEXTUAL);
 
         return WebClient.builder()
                 .baseUrl(baseUrl)
                 .clientConnector(new ReactorClientHttpConnector(httpClient))
                 .build();
-    }
-
-    @Bean
-    public ReactiveWebClient<PaytmOrderDTO, PaytmOrderRequestDTO> paytmTradeDTOReactiveWebClient(@Qualifier("paytmWebClient") WebClient paytmWebClient) {
-        return new ReactiveWebClient<>(paytmWebClient, PaytmOrderDTO.class, PaytmOrderRequestDTO.class);
-    }
-
-    @Bean
-    public ReactiveWebClient<PaytmTokenDTO, PaytmTokenRequestDTO> paytmTokenDTOReactiveWebClient(@Qualifier("paytmWebClient") WebClient paytmWebClient) {
-        return new ReactiveWebClient<>(paytmWebClient, PaytmTokenDTO.class, PaytmTokenRequestDTO.class);
-    }
-
-    @Bean
-    public BrokerService<PaytmOrderDTO, PaytmOrderRequestDTO> paytmBrokerService(
-            @Qualifier("paytmTradeDTOReactiveWebClient") ReactiveWebClient reactiveWebClient,
-            BrokerTokenService paytmTokenService) {
-        if (mockServiceConfig.mockPaytmServices) {
-            log.info("Initializing Trade mock [{}]", "MockPaytmTradeService");
-            return new MockPaytmTradeService(paytmTokenService, reactiveWebClient);
-        } else return new PaytmTradeService(paytmTokenService,reactiveWebClient);
-    }
-
-    @Bean
-    public BrokerTokenService<BrokerTokenDTO, String> paytmTokenService(
-            @Qualifier("paytmTokenDTOReactiveWebClient") ReactiveWebClient reactiveWebClient) throws BaseTraderException {
-        if (mockServiceConfig.mockPaytmServices) {
-            log.info("Initializing token mock [{}]", "MockPaytmTokenService");
-            return new MockPaytmTokenService(applicationConfig.apiKey, applicationConfig.apiSecret, reactiveWebClient);
-        } else return new PaytmTokenService(applicationConfig.apiKey, applicationConfig.apiSecret, reactiveWebClient);
-    }
-
-    @Bean
-    public OrderTransformer orderTransformer(){
-        return new OrderTransformer();
-    }
-
-    @Bean
-    public OrderService orderService(OrderRepository orderRepository, OrderTransformer orderTransformer){
-        return new OrderServiceImpl(orderRepository, orderTransformer);
-    }
-
-    @Bean
-    public BaseEntityTransformer<Order, PaytmOrderRequestDTO> paytmOrderRequestDTOTransformer(){
-        return new BaseEntityTransformer<Order, PaytmOrderRequestDTO>() {};
-    }
-
-    @Bean
-    public OrderProcessingService orderProcessingService(OrderService orderService,
-                                                         @Qualifier("paytmBrokerService") BrokerService<PaytmOrderDTO, PaytmOrderRequestDTO> paytmOrderService,
-                                                         @Qualifier("paytmOrderRequestDTOTransformer") BaseEntityTransformer<Order, PaytmOrderRequestDTO> baseEntityTransformer){
-        return new PaytmOrderProcessingService(applicationConfig.processorInterval,
-                applicationConfig.processorInitialDelay,
-                orderService, paytmOrderService, baseEntityTransformer);
     }
 
     @Bean
@@ -168,7 +100,8 @@ public class MockServiceContext {
         return new MockOrderDataGenerator(orderRepository);
     }
 
-    public void setUpMockBrokerServer(int port) throws IOException {
+    @Bean
+    public MockWebServer mockWebServer() throws IOException {
         MockWebServer mockWebServer = new MockWebServer();
 
         ObjectMapper objectMapper = new ObjectMapper();
@@ -179,19 +112,33 @@ public class MockServiceContext {
             public MockResponse dispatch(@NotNull RecordedRequest recordedRequest) throws InterruptedException {
                 switch (recordedRequest.getPath()) {
                     case "/accounts/v2/gettoken":
-                        PaytmTokenDTO paytmTokenDTO = new PaytmTokenDTO("test access token",
-                                "test merchant id", "test channel id", "test api key",
-                                "test paytm access token", "test public access token",
-                                "test readonly access token");
-                        return new MockResponse(200,
-                                Headers.of(Map.of("Content-Type", MediaType.APPLICATION_JSON_VALUE)),
-                                objectMapper.writeValueAsString(paytmTokenDTO));
+                        if (mockServiceConfig.mockPaytmServices400Error){
+                            BrokerErrorDTO expected = new BrokerErrorDTO("error",
+                                    "Oops! Something went wrong.", "RS-0022");
+                            return new MockResponse(400, Headers.of(Map.of("Content-Type", MediaType.APPLICATION_JSON_VALUE)),
+                                    objectMapper.writeValueAsString(expected));
+                        } else {
+                            PaytmTokenDTO paytmTokenDTO = new PaytmTokenDTO("test access token",
+                                    "test merchant id", "test channel id", "test api key",
+                                    "test paytm access token", "test public access token",
+                                    "test readonly access token");
+                            return new MockResponse(200,
+                                    Headers.of(Map.of("Content-Type", MediaType.APPLICATION_JSON_VALUE)),
+                                    objectMapper.writeValueAsString(paytmTokenDTO));
+                        }
 
                     case "/orders/v1/place/regular":
-                        PaytmOrderDTO paytmOrderDTO = new PaytmOrderDTO("1", "test status");
-                        return new MockResponse(200,
-                                Headers.of(Map.of("Content-Type", MediaType.APPLICATION_JSON_VALUE)),
-                                objectMapper.writeValueAsString(paytmOrderDTO));
+                        if (mockServiceConfig.mockPaytmServices400Error){
+                            BrokerErrorDTO expected = new BrokerErrorDTO("error",
+                                    "Oops! Something went wrong.", "RS-0022");
+                            return new MockResponse(400, Headers.of(Map.of("Content-Type", MediaType.APPLICATION_JSON_VALUE)),
+                                    objectMapper.writeValueAsString(expected));
+                        } else {
+                            PaytmOrderDTO paytmOrderDTO = new PaytmOrderDTO("1", "test status");
+                            return new MockResponse(200,
+                                    Headers.of(Map.of("Content-Type", MediaType.APPLICATION_JSON_VALUE)),
+                                    objectMapper.writeValueAsString(paytmOrderDTO));
+                        }
                 }
 
                 return new MockResponse(404);
@@ -199,6 +146,8 @@ public class MockServiceContext {
         };
 
         mockWebServer.setDispatcher(dispatcher);
-        mockWebServer.start(port);
+        mockWebServer.start(mockServiceConfig.mockPaytmServicesPort);
+
+        return mockWebServer;
     }
 }

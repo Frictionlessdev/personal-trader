@@ -1,5 +1,6 @@
 package com.sb.projects.trader.DTO.paytm;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.sb.projects.trader.DTO.DataTransferObject;
 import com.sb.projects.trader.enums.Exchange;
@@ -45,5 +46,6 @@ public class PaytmOrderRequestDTO implements DataTransferObject {
     @JsonProperty("off_mkt_flag")
     private String offMktFlag;
 
+    @JsonIgnore
     private String orderId;
 }

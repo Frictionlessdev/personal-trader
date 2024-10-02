@@ -1,18 +1,22 @@
 package com.sb.projects.trader.entity;
 
+import com.sb.projects.trader.DTO.BrokerErrorDTO;
+import com.sb.projects.trader.entity.converter.RawBrokerErrorConverter;
 import com.sb.projects.trader.enums.Exchange;
 import com.sb.projects.trader.enums.OrderStatus;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import org.hibernate.annotations.DynamicUpdate;
 
 @ToString
 @Getter
 @Setter
 @Entity
 @Table(name = "orders")
-public class Order implements JpaEntityObject{
+@DynamicUpdate
+public class Order extends BaseEntity{
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id", nullable = false)
@@ -35,4 +39,8 @@ public class Order implements JpaEntityObject{
 
     @Column(name = "status", nullable = false)
     private OrderStatus status;
+
+    @Convert(converter = RawBrokerErrorConverter.class)
+    @Column(name = "rawBrokerError")
+    private BrokerErrorDTO rawBrokerError;
 }

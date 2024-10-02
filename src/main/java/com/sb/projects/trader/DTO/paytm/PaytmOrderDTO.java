@@ -3,6 +3,7 @@ package com.sb.projects.trader.DTO.paytm;
 import com.sb.projects.trader.DTO.DataTransferObject;
 import lombok.*;
 
+@Builder
 @ToString
 @Getter
 public class PaytmOrderDTO implements DataTransferObject {

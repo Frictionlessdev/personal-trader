@@ -15,4 +15,5 @@ public class OrderDTO implements DataTransferObject {
     private double price;
     private String userId;
     private OrderStatus status;
+    private BrokerErrorDTO rawBrokerErrorDTO;
 }

@@ -2,6 +2,7 @@ package com.sb.projects.trader.repository;
 
 import com.sb.projects.trader.entity.Order;
 import com.sb.projects.trader.enums.Exchange;
+import com.sb.projects.trader.enums.OrderStatus;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -31,6 +32,7 @@ class OrderRepositoryTest {
         testOrder.setPrice(100.50D);
         testOrder.setExchange(Exchange.NSE);
         testOrder.setUserId("1xd23rfgt3");
+        testOrder.setStatus(OrderStatus.Saved);
 
         orderRepository.save(testOrder);
     }

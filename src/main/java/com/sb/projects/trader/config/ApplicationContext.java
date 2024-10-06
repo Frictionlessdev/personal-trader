@@ -5,12 +5,16 @@ import com.sb.projects.trader.DTO.paytm.*;
 import com.sb.projects.trader.entity.Order;
 import com.sb.projects.trader.exceptions.BaseTraderException;
 import com.sb.projects.trader.repository.OrderRepository;
+import com.sb.projects.trader.repository.StrategyOrderRepository;
+import com.sb.projects.trader.repository.StrategyRepository;
 import com.sb.projects.trader.repository.TokenRepository;
 import com.sb.projects.trader.service.*;
 import com.sb.projects.trader.service.paytm.PaytmOrderProcessingService;
 import com.sb.projects.trader.service.paytm.PaytmTokenService;
 import com.sb.projects.trader.service.paytm.PaytmTradeService;
-import com.sb.projects.trader.task.SubmitTrade;
+import com.sb.projects.trader.task.CreateOrder;
+import com.sb.projects.trader.task.CreateStrategyOrder;
+import com.sb.projects.trader.task.SubmitOrder;
 import com.sb.projects.trader.transformer.BaseEntityTransformer;
 import com.sb.projects.trader.transformer.OrderTransformer;
 import com.sb.projects.trader.utils.ReactiveWebClient;
@@ -67,15 +71,43 @@ public class ApplicationContext {
     }
 
     @Bean
-    public Runnable submitTradeTask(OrderService orderService,
+    public Runnable submitOrderTask(OrderService orderService,
                                     @Qualifier("paytmBrokerService") BrokerService<PaytmOrderDTO, PaytmOrderRequestDTO> paytmOrderService,
                                     @Qualifier("paytmOrderRequestDTOTransformer") BaseEntityTransformer<Order, PaytmOrderRequestDTO> paytmOrderRequestDTOBaseEntityTransformerTransformer){
-        return new SubmitTrade(orderService, paytmOrderService, paytmOrderRequestDTOBaseEntityTransformerTransformer);
+        return new SubmitOrder(orderService, paytmOrderService, paytmOrderRequestDTOBaseEntityTransformerTransformer);
     }
 
     @Bean
-    public OrderProcessingService orderProcessingService(Runnable submitTradeTask){
+    public OrderProcessingService orderProcessingService(Runnable submitOrderTask){
         return new PaytmOrderProcessingService(applicationConfig.processorInterval,
-                applicationConfig.processorInitialDelay, submitTradeTask);
+                applicationConfig.processorInitialDelay, submitOrderTask);
+    }
+
+    @Bean
+    public StrategyService strategyService(){
+        return new StrategyServiceImpl();
+    }
+
+    @Bean
+    public UserService userService(){
+        return new UserServiceImpl();
+    }
+
+    @Bean
+    public CreateStrategyOrder createStrategyOrderTask(StrategyService strategyService,
+                                                       UserService userService){
+        return new CreateStrategyOrder(strategyService, userService);
+    }
+
+    @Bean
+    public CreateOrder createOrderTask(OrderService orderService, StrategyService strategyService){
+        return new CreateOrder(orderService, strategyService);
+    }
+
+    @Bean
+    public StrategyProcessingService strategyProcessingService(Runnable createStrategyOrderTask,
+                                                               Runnable createOrderTask){
+        return new StrategyProcessingService(applicationConfig.processorInitialDelay,
+                applicationConfig.processorInterval, createStrategyOrderTask, createOrderTask);
     }
 }

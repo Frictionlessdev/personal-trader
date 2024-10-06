@@ -1,4 +1,5 @@
 package com.sb.projects.trader.enums;
 
-public class StrategyType {
+public enum StrategyType {
+    SIMPLE_SIP, ADVANCED_SIP
 }

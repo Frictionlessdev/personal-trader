@@ -26,7 +26,7 @@ import java.util.Arrays;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(SpringExtension.class)
-public class SubmitTradeTest {
+public class SubmitOrderTest {
 
     @Mock
     OrderService orderService;
@@ -36,11 +36,11 @@ public class SubmitTradeTest {
 
     BaseEntityTransformer<Order, PaytmOrderRequestDTO> baseEntityTransformer = new BaseEntityTransformer<Order, PaytmOrderRequestDTO>() {};;
 
-    SubmitTrade submitTrade;
+    SubmitOrder submitOrder;
 
     @BeforeEach
     public void setUp(){
-        submitTrade = new SubmitTrade(orderService, brokerService, baseEntityTransformer);
+        submitOrder = new SubmitOrder(orderService, brokerService, baseEntityTransformer);
     }
 
     @Test
@@ -53,7 +53,7 @@ public class SubmitTradeTest {
         Mockito.doReturn(paytmOrderDTOMono).when(brokerService).submitOrder(paytmOrderRequestDTO);
         Mockito.when(orderService.submit(paytmOrderRequestDTO.getOrderId(), OrderStatus.Submitted, null)).thenReturn(orderDTO);
 
-        submitTrade.submit(paytmOrderRequestDTO);
+        submitOrder.submit(paytmOrderRequestDTO);
 
         verify(brokerService).submitOrder(paytmOrderRequestDTO);
         verify(orderService).submit(paytmOrderRequestDTO.getOrderId(), OrderStatus.Submitted, null);
@@ -68,7 +68,7 @@ public class SubmitTradeTest {
         OrderDTO orderDTO = generateOrderDTO();
         Mockito.when(orderService.submit(paytmOrderRequestDTO.getOrderId(), OrderStatus.Rejected, null)).thenReturn(orderDTO);
 
-        submitTrade.submit(paytmOrderRequestDTO);
+        submitOrder.submit(paytmOrderRequestDTO);
 
         verify(brokerService).submitOrder(paytmOrderRequestDTO);
         verify(orderService).submit(paytmOrderRequestDTO.getOrderId(), OrderStatus.Rejected, null);
@@ -87,7 +87,7 @@ public class SubmitTradeTest {
         OrderDTO orderDTO = generateOrderDTO();
         Mockito.when(orderService.submit(paytmOrderRequestDTO.getOrderId(), OrderStatus.Rejected, paytmErrorDTO)).thenReturn(orderDTO);
 
-        submitTrade.submit(paytmOrderRequestDTO);
+        submitOrder.submit(paytmOrderRequestDTO);
 
         verify(brokerService).submitOrder(paytmOrderRequestDTO);
         verify(orderService).submit(paytmOrderRequestDTO.getOrderId(), OrderStatus.Rejected, paytmErrorDTO);

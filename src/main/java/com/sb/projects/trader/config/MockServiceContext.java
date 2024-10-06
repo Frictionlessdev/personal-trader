@@ -3,11 +3,13 @@ package com.sb.projects.trader.config;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sb.projects.trader.DTO.BrokerErrorDTO;
 import com.sb.projects.trader.DTO.mock.MockOrderDataGenerator;
+import com.sb.projects.trader.DTO.mock.MockStrategyDataGenerator;
 import com.sb.projects.trader.DTO.paytm.*;
 import com.sb.projects.trader.DTO.mock.MockStaticDataGenerator;
 import com.sb.projects.trader.exceptions.BaseTraderException;
 import com.sb.projects.trader.repository.OrderRepository;
 import com.sb.projects.trader.repository.SecurityRepository;
+import com.sb.projects.trader.repository.StrategyRepository;
 import com.sb.projects.trader.service.*;
 import com.sb.projects.trader.service.mock.MockStaticDataServiceImpl;
 import com.sb.projects.trader.transformer.SecurityTransformer;
@@ -96,11 +98,16 @@ public class MockServiceContext {
     }
 
     @Bean
+    @ConditionalOnProperty(name = "mocks.orderData", havingValue = "false")
     public MockOrderDataGenerator mockOrderDataGenerator(OrderRepository orderRepository){
         return new MockOrderDataGenerator(orderRepository);
     }
 
     @Bean
+    public MockStrategyDataGenerator mockStrategyDataGenerator(StrategyRepository strategyRepository){
+        return new MockStrategyDataGenerator(strategyRepository);
+    }
+                                                               @Bean
     public MockWebServer mockWebServer() throws IOException {
         MockWebServer mockWebServer = new MockWebServer();
 

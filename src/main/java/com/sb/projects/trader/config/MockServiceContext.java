@@ -35,6 +35,8 @@ import reactor.netty.http.client.HttpClient;
 import reactor.netty.transport.logging.AdvancedByteBufFormat;
 
 import java.io.*;
+import java.time.Duration;
+import java.util.Arrays;
 import java.util.Map;
 
 @Configuration
@@ -82,6 +84,7 @@ public class MockServiceContext {
 
         var httpClient = HttpClient
                 .create()
+                .responseTimeout(Duration.ofSeconds(5))
                 .wiretap("reactor.netty.http.client.HttpClient",
                         LogLevel.INFO, AdvancedByteBufFormat.TEXTUAL);
 
@@ -98,16 +101,18 @@ public class MockServiceContext {
     }
 
     @Bean
-    @ConditionalOnProperty(name = "mocks.orderData", havingValue = "false")
+    @ConditionalOnProperty(name = "mocks.orderData", havingValue = "true")
     public MockOrderDataGenerator mockOrderDataGenerator(OrderRepository orderRepository){
         return new MockOrderDataGenerator(orderRepository);
     }
 
     @Bean
+    @ConditionalOnProperty(name = "mocks.strategyData", havingValue = "true")
     public MockStrategyDataGenerator mockStrategyDataGenerator(StrategyRepository strategyRepository){
         return new MockStrategyDataGenerator(strategyRepository);
     }
-                                                               @Bean
+
+    @Bean
     public MockWebServer mockWebServer() throws IOException {
         MockWebServer mockWebServer = new MockWebServer();
 
@@ -118,8 +123,8 @@ public class MockServiceContext {
             @Override
             public MockResponse dispatch(@NotNull RecordedRequest recordedRequest) throws InterruptedException {
                 switch (recordedRequest.getPath()) {
-                    case "/accounts/v2/gettoken":
-                        if (mockServiceConfig.mockPaytmServices400Error){
+                    case "/accounts/v2/gettoken" -> {
+                        if (mockServiceConfig.mockPaytmServices400Error) {
                             BrokerErrorDTO expected = new BrokerErrorDTO("error",
                                     "Oops! Something went wrong.", "RS-0022");
                             return new MockResponse(400, Headers.of(Map.of("Content-Type", MediaType.APPLICATION_JSON_VALUE)),
@@ -133,9 +138,9 @@ public class MockServiceContext {
                                     Headers.of(Map.of("Content-Type", MediaType.APPLICATION_JSON_VALUE)),
                                     objectMapper.writeValueAsString(paytmTokenDTO));
                         }
-
-                    case "/orders/v1/place/regular":
-                        if (mockServiceConfig.mockPaytmServices400Error){
+                    }
+                    case "/orders/v1/place/regular" -> {
+                        if (mockServiceConfig.mockPaytmServices400Error) {
                             BrokerErrorDTO expected = new BrokerErrorDTO("error",
                                     "Oops! Something went wrong.", "RS-0022");
                             return new MockResponse(400, Headers.of(Map.of("Content-Type", MediaType.APPLICATION_JSON_VALUE)),
@@ -146,9 +151,30 @@ public class MockServiceContext {
                                     Headers.of(Map.of("Content-Type", MediaType.APPLICATION_JSON_VALUE)),
                                     objectMapper.writeValueAsString(paytmOrderDTO));
                         }
+                    }
+                    case String s when s.contains("/data/v1/price/live") -> {
+                        if (mockServiceConfig.mockPaytmServices400Error) {
+                            BrokerErrorDTO expected = new BrokerErrorDTO("error",
+                                    "Oops! Something went wrong.", "RS-0022");
+                            return new MockResponse(400, Headers.of(Map.of("Content-Type", MediaType.APPLICATION_JSON_VALUE)),
+                                    objectMapper.writeValueAsString(expected));
+                        } else {
+                            PaytmLivePriceDTO paytmLivePriceDTO = PaytmLivePriceDTO.builder().data(
+                                            Arrays.asList(PaytmLivePriceDataDTO.builder()
+                                                    .lastTradeTime(1412503198)
+                                                    .found(true)
+                                                    .changeAbsolute(-1.4000134D)
+                                                    .changePercent(-0.52D)
+                                                    .lastPrice(265.52D)
+                                                    .securityId(8506)
+                                                    .build())
+                                    ).build();
+                            return new MockResponse(200, Headers.of(Map.of("Content-Type", MediaType.APPLICATION_JSON_VALUE)),
+                                    objectMapper.writeValueAsString(paytmLivePriceDTO));
+                        }
+                    }
+                    default -> {return new MockResponse(404);}
                 }
-
-                return new MockResponse(404);
             }
         };
 

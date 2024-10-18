@@ -22,6 +22,12 @@ public class Order extends BaseEntity{
     @Column(name = "id", nullable = false)
     private String id;
 
+    @Column(name = "strategyOrderId", nullable = false)
+    private long strategyOrderId;
+
+    @Column(name = "strategyId", nullable = false)
+    private long strategyId;
+
     @Column(name = "securityId", nullable = false)
     private String securityId;
 

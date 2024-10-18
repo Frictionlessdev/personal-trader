@@ -8,5 +8,5 @@ public enum ErrorCode {
     RemoteHttpNotFound,
     RemoteBadRequest,
     EntityNotFound,
-    DBError, IOError
+    DBError, UnexpectedStatus, IOError
 }

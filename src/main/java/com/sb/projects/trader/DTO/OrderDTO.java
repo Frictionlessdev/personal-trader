@@ -9,6 +9,8 @@ import lombok.Data;
 @Builder
 public class OrderDTO implements DataTransferObject {
     private String id;
+    private long strategyOrderId;
+    private long strategyId;
     private String securityId;
     private Exchange exchange;
     private int quantity;

@@ -2,6 +2,7 @@ package com.sb.projects.trader.service.paytm;
 
 import com.sb.projects.trader.DTO.BrokerTokenDTO;
 import com.sb.projects.trader.DTO.paytm.PaytmErrorDTO;
+import com.sb.projects.trader.DTO.paytm.PaytmLivePriceDTO;
 import com.sb.projects.trader.DTO.paytm.PaytmTokenDTO;
 import com.sb.projects.trader.DTO.paytm.PaytmTokenRequestDTO;
 import com.sb.projects.trader.entity.Token;
@@ -36,14 +37,17 @@ public class PaytmTokenService implements BrokerTokenService<BrokerTokenDTO> {
     public Mono<BrokerTokenDTO> getToken() {
         String accessToken = getCachedToken(TokenType.accessToken);
         if (StringUtil.isNullOrEmpty(accessToken)) {
+            log.error("Access token not found in cache, requesting remote token service");
             Map<String, String> headers = new HashMap<>();
             headers.put("Host", "developer.paytmmoney.com");
 
             return reactiveWebClient
-                    .call(uri, headers, PaytmTokenRequestDTO.builder()
+                    .post(uri, headers, PaytmTokenRequestDTO.builder()
                             .apiKey(apiKey)
                             .apiSecret(apiSecret)
-                            .requestToken(getCachedToken(TokenType.requestToken)).build())
+                            .requestToken(getCachedToken(TokenType.requestToken))
+                            //.requestToken("any request token")
+                            .build())
                     .map(dto -> {
                         log.info("Remote token response: {}", dto.toString());
                         cacheToken(TokenType.accessToken, dto.getPaytmAccessToken());
@@ -56,7 +60,7 @@ public class PaytmTokenService implements BrokerTokenService<BrokerTokenDTO> {
         tokenRepository.deleteByTokenType(tokenType);
     }
 
-    private void cacheToken(TokenType tokenType, String token){
+    private void cacheToken(TokenType tokenType, String token) {
         Token tokenEntity = new Token();
         tokenEntity.setTokenType(tokenType);
         tokenEntity.setTokenIssuer(TokenIssuer.Paytm);
@@ -65,10 +69,7 @@ public class PaytmTokenService implements BrokerTokenService<BrokerTokenDTO> {
         tokenEntity.setExpiresAt(LocalDateTime.now().plusHours(8));
 
         tokenRepository.save(tokenEntity);
-    }
-
-    private void updateCachedToken(Token token){
-        tokenRepository.save(token);
+        log.info("Token cached: {}", tokenEntity);
     }
 
     private String getCachedToken(TokenType tokenType){
@@ -78,6 +79,7 @@ public class PaytmTokenService implements BrokerTokenService<BrokerTokenDTO> {
 
             if (token.isPresent())
                 if (token.get().getExpiresAt().isAfter(LocalDateTime.now())) {
+                    log.info("Found access token in cache");
                     return token.get().getToken();
                 }
 
@@ -86,6 +88,7 @@ public class PaytmTokenService implements BrokerTokenService<BrokerTokenDTO> {
                     TokenType.requestToken, TokenIssuer.Paytm);
 
             if (token.isPresent()) {
+                log.info("Found refresh token in cache");
                 return token.get().getToken();
             } else {
                 cacheToken(TokenType.requestToken, requestToken);

@@ -1,7 +1,9 @@
 package com.sb.projects.trader.task;
 
 import com.sb.projects.trader.DTO.BrokerErrorDTO;
+import com.sb.projects.trader.DTO.DataTransferObject;
 import com.sb.projects.trader.DTO.OrderDTO;
+import com.sb.projects.trader.DTO.paytm.PaytmLivePriceDTO;
 import com.sb.projects.trader.DTO.paytm.PaytmOrderDTO;
 import com.sb.projects.trader.DTO.paytm.PaytmOrderRequestDTO;
 import com.sb.projects.trader.entity.Order;

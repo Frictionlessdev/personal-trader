@@ -16,9 +16,15 @@ public class MockServiceConfig {
     @Value("${mocks.paytmServices:false}")
     public boolean mockPaytmServices;
 
+    @Value("${mocks.orderData:false}")
+    public boolean mockOrderData;
+
+    @Value("${mocks.strategyData:false}")
+    public boolean mockStrategyData;
+
     @Value("${mocks.paytmServices.port:9000}")
     public int mockPaytmServicesPort;
 
-    @Value("${mocks.paytmServices.http400error:true}")
+    @Value("${mocks.paytmServices.http400error:false}")
     public boolean mockPaytmServices400Error;
 }

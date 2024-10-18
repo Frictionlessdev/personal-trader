@@ -16,14 +16,15 @@ public class StrategyProcessingService implements OrderProcessingService {
     private Runnable createStrategyOrderTask;
     private Runnable createOrderTask;
     private final ScheduledExecutorService scheduledExecutorService =
-            Executors.newSingleThreadScheduledExecutor();
+            Executors.newScheduledThreadPool(1);
 
     @Override
     @PostConstruct
     public void processOrder() {
-        scheduledExecutorService.scheduleAtFixedRate(createStrategyOrderTask,
-                initialDelay, period, TimeUnit.MILLISECONDS);
-        scheduledExecutorService.scheduleAtFixedRate(createOrderTask,
+        scheduledExecutorService.scheduleAtFixedRate(() -> {
+                    createStrategyOrderTask.run();
+                    createOrderTask.run();
+                },
                 initialDelay, period, TimeUnit.MILLISECONDS);
     }
 }

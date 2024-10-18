@@ -20,10 +20,19 @@ public class ApplicationConfig {
     @Value("${trader.broker.paytm.baseUrl}")
     public String paytmBaseUrl;
 
-    @Value("${trader.order.processor.initialDelay:100}")
+    @Value("${trader.order.processor.execute:true}")
+    public boolean orderProcessorExecution;
+
+    @Value("${trader.strategyOrder.processor.execute:false}")
+    public boolean strategyOrderProcessorExecution;
+
+    @Value("${trader.strategy.processor.execute:false}")
+    public boolean strategyProcessorExecution;
+
+    @Value("${trader.order.processor.initialDelay:2000}")
     public long processorInitialDelay;
 
-    @Value("${trader.order.processor.interval:500}")
+    @Value("${trader.order.processor.interval:1000}")
     public long processorInterval;
 
     @Value("${trader.order.processor.threadPool.size:1}")

@@ -1,6 +1,8 @@
 package com.sb.projects.trader.config;
 
+import com.sb.projects.trader.DTO.BrokerErrorDTO;
 import com.sb.projects.trader.DTO.BrokerTokenDTO;
+import com.sb.projects.trader.DTO.DataTransferObject;
 import com.sb.projects.trader.DTO.paytm.*;
 import com.sb.projects.trader.entity.Order;
 import com.sb.projects.trader.exceptions.BaseTraderException;
@@ -10,6 +12,7 @@ import com.sb.projects.trader.repository.StrategyRepository;
 import com.sb.projects.trader.repository.TokenRepository;
 import com.sb.projects.trader.service.*;
 import com.sb.projects.trader.service.paytm.PaytmOrderProcessingService;
+import com.sb.projects.trader.service.paytm.PaytmPriceService;
 import com.sb.projects.trader.service.paytm.PaytmTokenService;
 import com.sb.projects.trader.service.paytm.PaytmTradeService;
 import com.sb.projects.trader.task.CreateOrder;
@@ -31,8 +34,8 @@ public class ApplicationContext {
     ApplicationConfig applicationConfig;
 
     @Bean
-    public ReactiveWebClient<PaytmOrderDTO, PaytmOrderRequestDTO, PaytmErrorDTO> paytmTradeDTOReactiveWebClient(@Qualifier("paytmWebClient") WebClient paytmWebClient) {
-        return new ReactiveWebClient<>(paytmWebClient, PaytmOrderDTO.class, PaytmOrderRequestDTO.class, PaytmErrorDTO.class);
+    public ReactiveWebClient<BrokerErrorDTO, PaytmOrderRequestDTO, PaytmErrorDTO> paytmTradeDTOReactiveWebClient(@Qualifier("paytmWebClient") WebClient paytmWebClient) {
+        return new ReactiveWebClient<>(paytmWebClient, BrokerErrorDTO.class, PaytmOrderRequestDTO.class, PaytmErrorDTO.class);
     }
 
     @Bean
@@ -41,7 +44,12 @@ public class ApplicationContext {
     }
 
     @Bean
-    public BrokerService<PaytmOrderDTO, PaytmOrderRequestDTO> paytmBrokerService(
+    public ReactiveWebClient<PaytmLivePriceDTO, DataTransferObject, BrokerErrorDTO> paytmPriceReactiveWebClient(@Qualifier("paytmWebClient") WebClient paytmWebClient) {
+        return new ReactiveWebClient<>(paytmWebClient, PaytmLivePriceDTO.class, DataTransferObject.class, BrokerErrorDTO.class);
+    }
+
+    @Bean
+    public BrokerService<BrokerErrorDTO, PaytmOrderRequestDTO> paytmBrokerService(
             @Qualifier("paytmTradeDTOReactiveWebClient") ReactiveWebClient reactiveWebClient,
             BrokerTokenService paytmTokenService) {
             return new PaytmTradeService(paytmTokenService, reactiveWebClient);
@@ -53,6 +61,12 @@ public class ApplicationContext {
         return new PaytmTokenService(applicationConfig.apiKey,
                 applicationConfig.apiSecret, applicationConfig.requestToken,
                 reactiveWebClient, tokenRepository);
+    }
+
+    @Bean
+    public BrokerPriceService<PaytmLivePriceDTO> paytmPriceDTOBrokerService(BrokerTokenService paytmTokenService,
+                                                                            @Qualifier("paytmPriceReactiveWebClient") ReactiveWebClient reactiveWebClient){
+        return new PaytmPriceService(paytmTokenService, reactiveWebClient);
     }
 
     @Bean
@@ -72,9 +86,9 @@ public class ApplicationContext {
 
     @Bean
     public Runnable submitOrderTask(OrderService orderService,
-                                    @Qualifier("paytmBrokerService") BrokerService<PaytmOrderDTO, PaytmOrderRequestDTO> paytmOrderService,
+                                    @Qualifier("paytmBrokerService") BrokerService<BrokerErrorDTO, PaytmOrderRequestDTO> paytmOrderService,
                                     @Qualifier("paytmOrderRequestDTOTransformer") BaseEntityTransformer<Order, PaytmOrderRequestDTO> paytmOrderRequestDTOBaseEntityTransformerTransformer){
-        return new SubmitOrder(orderService, paytmOrderService, paytmOrderRequestDTOBaseEntityTransformerTransformer);
+        return new SubmitOrder(applicationConfig.orderProcessorExecution, orderService, paytmOrderService, paytmOrderRequestDTOBaseEntityTransformerTransformer);
     }
 
     @Bean
@@ -84,8 +98,9 @@ public class ApplicationContext {
     }
 
     @Bean
-    public StrategyService strategyService(){
-        return new StrategyServiceImpl();
+    public StrategyService strategyService(StrategyRepository strategyRepository,
+                                           StrategyOrderService strategyOrderService){
+        return new StrategyServiceImpl(strategyRepository, strategyOrderService);
     }
 
     @Bean
@@ -94,14 +109,20 @@ public class ApplicationContext {
     }
 
     @Bean
-    public CreateStrategyOrder createStrategyOrderTask(StrategyService strategyService,
-                                                       UserService userService){
-        return new CreateStrategyOrder(strategyService, userService);
+    public StrategyOrderService strategyOrderService(StrategyOrderRepository strategyOrderRepository){
+        return new StrategyOrderServiceImpl(strategyOrderRepository);
     }
 
     @Bean
-    public CreateOrder createOrderTask(OrderService orderService, StrategyService strategyService){
-        return new CreateOrder(orderService, strategyService);
+    public CreateStrategyOrder createStrategyOrderTask(StrategyService strategyService, StrategyOrderService strategyOrderService,
+                                                       UserService userService){
+        return new CreateStrategyOrder(strategyService, strategyOrderService, userService);
+    }
+
+    @Bean
+    public CreateOrder createOrderTask(OrderService orderService, StrategyService strategyService,
+                                       BrokerPriceService<PaytmLivePriceDTO> paytmPriceBrokerService){
+        return new CreateOrder(orderService, strategyService, paytmPriceBrokerService);
     }
 
     @Bean

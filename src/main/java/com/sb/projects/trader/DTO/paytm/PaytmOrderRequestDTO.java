@@ -48,4 +48,10 @@ public class PaytmOrderRequestDTO implements DataTransferObject {
 
     @JsonIgnore
     private String orderId;
+
+    @JsonIgnore
+    private long strategyId;
+
+    @JsonIgnore
+    private long strategyOrderId;
 }

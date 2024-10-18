@@ -26,6 +26,8 @@ public class OrderServiceImpl implements OrderService {
         Order order = orderTransformer.transform(orderDTO, (OrderDTO dto) -> {
             Order entity = new Order();
             entity.setId(dto.getId());
+            entity.setStrategyOrderId(dto.getStrategyOrderId());
+            entity.setStrategyId(dto.getStrategyId());
             entity.setExchange(dto.getExchange());
             entity.setQuantity(dto.getQuantity());
             entity.setPrice(dto.getPrice());
@@ -35,19 +37,25 @@ public class OrderServiceImpl implements OrderService {
             return entity;
         });
 
-       Order savedOrder = orderRepository.save(order);
+        try {
+            Order savedOrder = orderRepository.save(order);
 
-       return orderTransformer.transform(savedOrder, (entity) ->
-             OrderDTO.builder()
-                    .id(entity.getId())
-                    .quantity(entity.getQuantity())
-                    .exchange(entity.getExchange())
-                    .price(entity.getPrice())
-                    .securityId(entity.getSecurityId())
-                    .userId(entity.getUserId())
-                    .status(entity.getStatus())
-                    .build()
-        );
+            return orderTransformer.transform(savedOrder, (entity) ->
+                    OrderDTO.builder()
+                            .id(entity.getId())
+                            .strategyId(entity.getStrategyId())
+                            .strategyOrderId(entity.getStrategyOrderId())
+                            .quantity(entity.getQuantity())
+                            .exchange(entity.getExchange())
+                            .price(entity.getPrice())
+                            .securityId(entity.getSecurityId())
+                            .userId(entity.getUserId())
+                            .status(entity.getStatus())
+                            .build()
+            );
+        } catch (Exception ex){
+            throw new BaseTraderException(ErrorCode.DBError, "Error saving Order entity to db", ex.getCause());
+        }
     }
 
     @Override

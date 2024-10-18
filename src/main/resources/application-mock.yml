@@ -1,5 +1,6 @@
 
 mocks:
   staticDataService: false
-  orderData: true
+  orderData: false
+  strategyData: true
   paytmServices: true

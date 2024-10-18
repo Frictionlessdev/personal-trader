@@ -9,7 +9,7 @@ import com.sb.projects.trader.exceptions.BaseTraderException;
 import java.util.List;
 
 public interface OrderService {
-    OrderDTO save(OrderDTO order);
+    OrderDTO save(OrderDTO order) throws BaseTraderException;
     OrderDTO submit(String orderId, OrderStatus status, BrokerErrorDTO brokerErrorDTO) throws BaseTraderException;
     List<Order> getPendingOrders();
     Order get(String orderId) throws BaseTraderException;

@@ -1,5 +1,7 @@
 package com.sb.projects.trader.task;
 
+import com.sb.projects.trader.DTO.BrokerErrorDTO;
+import com.sb.projects.trader.DTO.DataTransferObject;
 import com.sb.projects.trader.DTO.paytm.PaytmOrderDTO;
 import com.sb.projects.trader.DTO.paytm.PaytmOrderRequestDTO;
 import com.sb.projects.trader.entity.Order;
@@ -8,6 +10,7 @@ import com.sb.projects.trader.exceptions.BaseTraderException;
 import com.sb.projects.trader.exceptions.BrokerHttpException;
 import com.sb.projects.trader.service.BrokerService;
 import com.sb.projects.trader.service.OrderService;
+import com.sb.projects.trader.service.StrategyService;
 import com.sb.projects.trader.transformer.BaseEntityTransformer;
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
@@ -18,19 +21,27 @@ import java.util.List;
 @Slf4j
 @AllArgsConstructor
 public class SubmitOrder implements Runnable {
+    private final boolean orderProcessingExecution;
     private final OrderService orderService;
-    private final BrokerService<PaytmOrderDTO, PaytmOrderRequestDTO> brokerService;
+    private final BrokerService<BrokerErrorDTO, PaytmOrderRequestDTO> brokerService;
     private final BaseEntityTransformer<Order, PaytmOrderRequestDTO> orderRequestTransformer;
 
     @SneakyThrows
     @Override
     public void run() {
+        if (!orderProcessingExecution) {
+            log.error("Submit order processing execution stopped");
+            return;
+        }
+
         log.info("Running submit trade task...");
         List<Order> pendingOrders = orderService.getPendingOrders();
 
         pendingOrders.stream().map(pendingOrder -> orderRequestTransformer.transform(pendingOrder, order ->
                         PaytmOrderRequestDTO.builder()
                                 .orderId(order.getId())
+                                .strategyId(order.getStrategyId())
+                                .strategyOrderId(order.getStrategyOrderId())
                                 .offMktFlag("true")
                                 .source("N")
                                 .price(order.getPrice())
@@ -59,8 +70,10 @@ public class SubmitOrder implements Runnable {
             brokerService.submitOrder(paytmOrderRequestDTO).subscribe(
                     dto -> {
                         try {
-                            orderService.submit(paytmOrderRequestDTO.getOrderId(), OrderStatus.Submitted, null);
+                            orderService.submit(paytmOrderRequestDTO.getOrderId(), OrderStatus.Submitted, dto);
                             log.info("Order id '{}' submitted successfully to Paytm", paytmOrderRequestDTO.getOrderId());
+
+                            //strategyService.updateActualAggregatedInvestment(paytmOrderRequestDTO.getStrategyId(), )
                         } catch (BaseTraderException e) {
                             log.error("Error updating Order Id: '{}' to 'submitted' in store", paytmOrderRequestDTO.getOrderId());
                         }

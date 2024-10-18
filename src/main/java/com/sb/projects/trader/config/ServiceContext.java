@@ -15,6 +15,8 @@ import com.sb.projects.trader.transformer.OrderTransformer;
 import com.sb.projects.trader.transformer.SecurityTransformer;
 import com.sb.projects.trader.utils.ReactiveWebClient;
 import io.netty.handler.logging.LogLevel;
+import io.netty.handler.timeout.ReadTimeoutHandler;
+import io.netty.handler.timeout.WriteTimeoutHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
@@ -24,6 +26,9 @@ import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.netty.http.client.HttpClient;
 import reactor.netty.transport.logging.AdvancedByteBufFormat;
+
+import java.time.Duration;
+import java.util.concurrent.TimeUnit;
 
 @Configuration
 @Profile("!mock")
@@ -36,6 +41,10 @@ public class ServiceContext {
     WebClient paytmWebClient(){
         var httpClient = HttpClient
                 .create()
+                .responseTimeout(Duration.ofSeconds(5))
+                .doOnConnected(conn -> conn
+                        .addHandlerFirst("read timeout", new ReadTimeoutHandler(10, TimeUnit.SECONDS))
+                        .addHandlerFirst("write timeout", new WriteTimeoutHandler(5, TimeUnit.SECONDS)))
                 .wiretap("reactor.netty.http.client.HttpClient",
                         LogLevel.DEBUG, AdvancedByteBufFormat.TEXTUAL);
 

@@ -1,5 +1,7 @@
 package com.sb.projects.trader.service.paytm;
 
+import com.sb.projects.trader.DTO.BrokerErrorDTO;
+import com.sb.projects.trader.DTO.paytm.PaytmLivePriceDTO;
 import com.sb.projects.trader.DTO.paytm.PaytmOrderDTO;
 import com.sb.projects.trader.DTO.paytm.PaytmOrderRequestDTO;
 import com.sb.projects.trader.TraderApplicationTests;

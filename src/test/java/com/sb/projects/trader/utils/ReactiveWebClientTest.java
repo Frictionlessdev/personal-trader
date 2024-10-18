@@ -3,10 +3,8 @@ package com.sb.projects.trader.utils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sb.projects.trader.DTO.BrokerErrorDTO;
-import com.sb.projects.trader.DTO.paytm.ErrorData;
-import com.sb.projects.trader.DTO.paytm.PaytmErrorDTO;
-import com.sb.projects.trader.DTO.paytm.PaytmTokenDTO;
-import com.sb.projects.trader.DTO.paytm.PaytmTokenRequestDTO;
+import com.sb.projects.trader.DTO.DataTransferObject;
+import com.sb.projects.trader.DTO.paytm.*;
 import com.sb.projects.trader.exceptions.BrokerHttpException;
 import io.netty.handler.logging.LogLevel;
 import mockwebserver3.MockResponse;
@@ -40,6 +38,7 @@ class ReactiveWebClientTest {
     public MockWebServer mockWebServer;
 
     ReactiveWebClient<PaytmTokenDTO, PaytmTokenRequestDTO, BrokerErrorDTO> reactiveWebClient;
+    ReactiveWebClient<PaytmLivePriceDTO, DataTransferObject, BrokerErrorDTO> reactiveWebClientGet;
     ObjectMapper objectMapper = new ObjectMapper();
 
     @BeforeEach
@@ -59,7 +58,10 @@ class ReactiveWebClientTest {
                 .clientConnector(new ReactorClientHttpConnector(httpClient))
                 .build();
 
-        reactiveWebClient = new ReactiveWebClient<>(webClient, PaytmTokenDTO.class, PaytmTokenRequestDTO.class, BrokerErrorDTO.class);
+        reactiveWebClient = new ReactiveWebClient<>(webClient, PaytmTokenDTO.class,
+                PaytmTokenRequestDTO.class, BrokerErrorDTO.class);
+        reactiveWebClientGet = new ReactiveWebClient<>(webClient, PaytmLivePriceDTO.class,
+                DataTransferObject.class, BrokerErrorDTO.class);
     }
 
     @Test
@@ -78,7 +80,7 @@ class ReactiveWebClientTest {
         mockWebServer.enqueue(new MockResponse(200, Headers.of(Map.of("Content-Type", MediaType.APPLICATION_JSON_VALUE)),
                 objectMapper.writeValueAsString(expected)));
 
-        Mono<PaytmTokenDTO> paytmTokenDTOMono = reactiveWebClient.call("", new HashMap<>(), paytmTokenRequestDTO);
+        Mono<PaytmTokenDTO> paytmTokenDTOMono = reactiveWebClient.post("", new HashMap<>(), paytmTokenRequestDTO);
         PaytmTokenDTO actual = paytmTokenDTOMono.block();
 
         assertThat(expected, Matchers.samePropertyValuesAs(actual));
@@ -99,8 +101,28 @@ class ReactiveWebClientTest {
         mockWebServer.enqueue(new MockResponse(400, Headers.of(Map.of("Content-Type", MediaType.APPLICATION_JSON_VALUE)),
                 objectMapper.writeValueAsString(expected)));
 
-        StepVerifier.create(reactiveWebClient.call("",
+        StepVerifier.create(reactiveWebClient.post("",
                 new HashMap<>(), paytmTokenRequestDTO))
                 .expectError(BrokerHttpException.class).verify();
+    }
+
+    @Test
+    void makeWebClientGetCallSuccessfully() throws JsonProcessingException {
+        PaytmLivePriceDTO expected = PaytmLivePriceDTO.builder()
+                .securityId(8506)
+                .lastPrice(266.05D)
+                .changePercent(-1.05D)
+                .changeAbsolute(15.3D)
+                .found(true)
+                .lastTradeTime(123123123L)
+                .mode("LTP")
+                .tradable("true")
+                .build();
+
+        mockWebServer.enqueue(new MockResponse(200, Headers.of(Map.of("Content-Type", MediaType.APPLICATION_JSON_VALUE)),
+                objectMapper.writeValueAsString(expected)));
+
+        StepVerifier.create(reactiveWebClientGet.get("", new HashMap<>(), new HashMap<>()))
+                .expectSubscription().expectNext(expected);
     }
 }
